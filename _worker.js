@@ -11,7 +11,7 @@ let userID = '89b3cbba-e6ac-485a-9481-976a0415eab9';
 
 // https://www.nslookup.io/domains/cdn.xn--b6gac.eu.org/dns-records/
 // https://www.nslookup.io/domains/cdn-all.xn--b6gac.eu.org/dns-records/
-const proxyIPs= ['aliyun.classelivre.eu.org','3k.fxxk.dedyn.io','alvless.comorg.us.kg', 'alvless.filegear-sg.me', 'vmess.fxxk.dedyn.io'];
+const proxyIPs= ['3k.fxxk.dedyn.io','alvless.comorg.us.kg','vmess.fxxk.dedyn.io'];
 const defaultHttpPorts = ['80', '8080', '2052', '2082', '2086', '2095', '8880'];
 const defaultHttpsPorts = ['443', '8443', '2053', '2083', '2087', '2096'];
 
