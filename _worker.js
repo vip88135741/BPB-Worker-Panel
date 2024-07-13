@@ -11,7 +11,7 @@ let userID = '89b3cbba-e6ac-485a-9481-976a0415eab9';
 
 // https://www.nslookup.io/domains/cdn.xn--b6gac.eu.org/dns-records/
 // https://www.nslookup.io/domains/cdn-all.xn--b6gac.eu.org/dns-records/
-const proxyIPs= ['cdn.xn--b6gac.eu.org','alvless.comorg.us.kg','cdn-all.xn--b6gac.eu.org','edgetunnel.anycast.eu.org'];
+const proxyIPs= ['cdn.xn--b6gac.eu.org', 'cdn-all.xn--b6gac.eu.org', 'edgetunnel.anycast.eu.org'];
 
 const defaultHttpPorts = ['80', '8080', '2052', '2082', '2086', '2095', '8880'];
 const defaultHttpsPorts = ['443', '8443', '2053', '2083', '2087', '2096'];
@@ -20,7 +20,7 @@ let proxyIP = proxyIPs[Math.floor(Math.random() * proxyIPs.length)];
 
 let dohURL = 'https://cloudflare-dns.com/dns-query';
 
-let panelVersion = '2.4.4';
+let panelVersion = '2.4.5';
 
 if (!isValidUUID(userID)) {
     throw new Error('uuid is not valid');
@@ -284,7 +284,7 @@ async function vlessOverWSHandler(request) {
 				isDns = true;
 			}
 
-			// ["version", "附加信息长度 N"]
+			// ["version", "éå ä¿¡æ¯é¿åº¦ N"]
 			const vlessResponseHeader = new Uint8Array([vlessVersion[0], 0]);
 			const rawClientData = chunk.slice(rawDataIndex);
 
@@ -825,18 +825,18 @@ const generateRemark = (index, port) => {
     switch (index) {
         case 0:
         case 1:
-            remark = `💦 BPB - Domain_${index + 1} : ${port}`;
+            remark = `ð¦ BPB - Domain_${index + 1} : ${port}`;
             break;
         case 2:
         case 3:
-            remark = `💦 BPB - IPv4_${index - 1} : ${port}`;
+            remark = `ð¦ BPB - IPv4_${index - 1} : ${port}`;
             break;
         case 4:
         case 5:
-            remark = `💦 BPB - IPv6_${index - 3} : ${port}`;
+            remark = `ð¦ BPB - IPv6_${index - 3} : ${port}`;
             break;
         default:
-            remark = `💦 BPB - Clean IP_${index - 5} : ${port}`;
+            remark = `ð¦ BPB - Clean IP_${index - 5} : ${port}`;
             break;
     }
 
@@ -968,7 +968,7 @@ const buildWorkerLessConfig = async (env, client) => {
     fakeOutbound.tag = 'fake-outbound';
 
     let fragConfig = structuredClone(xrayConfigTemp);
-    fragConfig.remarks  = '💦 BPB Frag - WorkerLess ⭐'
+    fragConfig.remarks  = 'ð¦ BPB Frag - WorkerLess â­'
     fragConfig.dns = await buildDNSObject(remoteDNS, localDNS, blockAds, bypassIran, blockPorn, true);
     fragConfig.outbounds[0].settings.domainStrategy = 'UseIP';
     fragConfig.outbounds[0].settings.fragment.length = `${lengthMin}-${lengthMax}`;
@@ -1110,7 +1110,7 @@ const getFragmentConfigs = async (env, hostName, client) => {
     };
 
     let bestPing = structuredClone(xrayConfigTemp);
-    bestPing.remarks = '💦 BPB Frag - Best Ping 💥';
+    bestPing.remarks = 'ð¦ BPB Frag - Best Ping ð¥';
     bestPing.dns = await buildDNSObject(remoteDNS, localDNS, blockAds, bypassIran, blockPorn);
     bestPing.outbounds[0].settings.fragment.length = `${lengthMin}-${lengthMax}`;
     bestPing.outbounds[0].settings.fragment.interval = `${intervalMin}-${intervalMax}`;
@@ -1131,7 +1131,7 @@ const getFragmentConfigs = async (env, hostName, client) => {
     }
 
     let bestFragment = structuredClone(xrayConfigTemp);
-    bestFragment.remarks = '💦 BPB Frag - Best Fragment 😎';
+    bestFragment.remarks = 'ð¦ BPB Frag - Best Fragment ð';
     bestFragment.dns = await buildDNSObject(remoteDNS, localDNS, blockAds, bypassIran, blockPorn);
     bestFragment.outbounds.splice(0,1);
     bestFragValues.forEach( (fragLength, index) => {
@@ -1190,6 +1190,8 @@ const getFragmentConfigs = async (env, hostName, client) => {
 
 const getSingboxConfig = async (env, hostName) => {
     let proxySettings = {};
+    let outboundDomains = [];
+    const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-]{1,63}\.)*[a-zA-Z0-9][a-zA-Z0-9-]{0,62}\.[a-zA-Z]{2,11}$/;
     
     try {
         proxySettings = await env.bpb.get("proxySettings", {type: 'json'});
@@ -1228,8 +1230,11 @@ const getSingboxConfig = async (env, hostName) => {
             config.outbounds.push(outbound);
             config.outbounds[0].outbounds.push(remark);
             config.outbounds[1].outbounds.push(remark);
+            if (domainRegex.test(outbound.server)) outboundDomains.push(outbound.server);
         });
     });
+
+    config.dns.rules[0].domain = [...new Set(outboundDomains)];
 
     return config;
 }
@@ -1241,6 +1246,8 @@ const getWarpConfigs = async (env, client) => {
     let xrayWarpBestPing = structuredClone(xrayConfigTemp);
     let xrayWoWConfigTemp = structuredClone(xrayConfigTemp);
     let singboxWarpConfig = structuredClone(singboxConfigTemp);
+    let outboundDomains = [];
+    const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-]{1,63}\.)*[a-zA-Z0-9][a-zA-Z0-9-]{0,62}\.[a-zA-Z]{2,11}$/;
     
     try {
         proxySettings = await env.bpb.get("proxySettings", {type: 'json'});
@@ -1253,19 +1260,19 @@ const getWarpConfigs = async (env, client) => {
     const {xray: xrayWarpOutbounds, singbox: singboxWarpOutbounds} = await buildWarpOutbounds(remoteDNS, localDNS, blockAds, bypassIran, blockPorn, bypassLAN, warpEndpoints) 
     const {xray: xrayWoWOutbounds, singbox: singboxWoWOutbounds} = await buildWoWOutbounds(remoteDNS, localDNS, blockAds, bypassIran, blockPorn, bypassLAN, wowEndpoint); 
     
-    singboxWarpConfig.outbounds[0].outbounds = ['💦 Warp Best Ping 🚀'];
-    singboxWarpConfig.outbounds[1].tag = '💦 Warp Best Ping 🚀';
+    singboxWarpConfig.outbounds[0].outbounds = ['ð¦ Warp Best Ping ð'];
+    singboxWarpConfig.outbounds[1].tag = 'ð¦ Warp Best Ping ð';
     xrayWarpConfig.dns = await buildDNSObject(remoteDNS, localDNS, blockAds, bypassIran, blockPorn);
     xrayWarpConfig.routing.rules = buildRoutingRules(localDNS, blockAds, bypassIran, blockPorn, bypassLAN, false, false);
     xrayWarpConfig.outbounds.splice(0,1);
     xrayWarpConfig.routing.rules[xrayWarpConfig.routing.rules.length - 1].outboundTag = 'warp';
     delete xrayWarpConfig.observatory;
     delete xrayWarpConfig.routing.balancers;
-    xrayWarpBestPing.remarks = '💦 BPB - Warp Best Ping 🚀'
+    xrayWarpBestPing.remarks = 'ð¦ BPB - Warp Best Ping ð'
     xrayWarpBestPing.dns = await buildDNSObject(remoteDNS, localDNS, blockAds, bypassIran, blockPorn);
     xrayWarpBestPing.routing.rules = buildRoutingRules(localDNS, blockAds, bypassIran, blockPorn, bypassLAN, false, true);
     xrayWarpBestPing.outbounds.splice(0,1);
-    xrayWarpBestPing.routing.balancers[0].selector = 'warp';
+    xrayWarpBestPing.routing.balancers[0].selector = ['warp'];
     xrayWarpBestPing.observatory.subjectSelector = ['warp'];
     xrayWoWConfigTemp.dns = await buildDNSObject(remoteDNS, localDNS, blockAds, bypassIran, blockPorn);
     xrayWoWConfigTemp.routing.rules = buildRoutingRules(localDNS, blockAds, bypassIran, blockPorn, bypassLAN, false, false);
@@ -1276,7 +1283,7 @@ const getWarpConfigs = async (env, client) => {
     xrayWarpOutbounds.forEach((outbound, index) => {
         xrayWarpConfigs.push({
             ...xrayWarpConfig,
-            remarks: `💦 BPB - Warp ${index + 1} 🇮🇷`,
+            remarks: `ð¦ BPB - Warp ${index + 1} ð®ð·`,
             outbounds: [{...outbound, tag: 'warp'}, ...xrayWarpConfig.outbounds]
         });
     });
@@ -1284,7 +1291,7 @@ const getWarpConfigs = async (env, client) => {
     xrayWoWOutbounds.forEach((outbound, index) => {
         if (outbound.tag.includes('warp-out')) {
             let xrayWoWConfig = structuredClone(xrayWoWConfigTemp);
-            xrayWoWConfig.remarks = `💦 BPB - WoW ${index/2 + 1} 🌍`;
+            xrayWoWConfig.remarks = `ð¦ BPB - WoW ${index/2 + 1} ð`;
             xrayWoWConfig.outbounds = [{...xrayWoWOutbounds[index]}, {...xrayWoWOutbounds[index + 1]}, ...xrayWoWConfig.outbounds];
             xrayWoWConfig.routing.rules[xrayWoWConfig.routing.rules.length - 1].outboundTag = outbound.tag;
             xrayWarpConfigs.push(xrayWoWConfig);
@@ -1298,14 +1305,18 @@ const getWarpConfigs = async (env, client) => {
         singboxWarpConfig.outbounds.push(outbound);
         singboxWarpConfig.outbounds[0].outbounds.push(outbound.tag);
         singboxWarpConfig.outbounds[1].outbounds.push(outbound.tag);
+        if (domainRegex.test(outbound.server)) outboundDomains.push(outbound.server);
     });
 
     singboxWoWOutbounds.forEach((outbound, index) => {
         if (outbound.tag.includes('WoW')) {
             singboxWarpConfig.outbounds.push(singboxWoWOutbounds[index], singboxWoWOutbounds[index + 1]);
             singboxWarpConfig.outbounds[0].outbounds.push(outbound.tag);
+            if (domainRegex.test(outbound.server)) outboundDomains.push(outbound.server);
         }
     });
+    
+    singboxWarpConfig.dns.rules[0].domain = [...new Set(outboundDomains)]; 
 
     return client === 'singbox' 
         ? singboxWarpConfig 
@@ -1351,7 +1362,7 @@ const buildWarpOutbounds = async (remoteDNS, localDNS, blockAds, bypassIran, blo
             ...singboxOutbound,
             server: endpoint.includes('[') ? endpoint.match(ipv6Regex)[1] : endpoint.split(':')[0],
             server_port: endpoint.includes('[') ? +endpoint.match(portRegex)[0] : +endpoint.split(':')[1],
-            tag: `💦 Warp ${index + 1} 🇮🇷`
+            tag: `ð¦ Warp ${index + 1} ð®ð·`
         });
     })
     
@@ -1399,7 +1410,7 @@ const buildWoWOutbounds = async (remoteDNS, localDNS, blockAds, bypassIran, bloc
             singboxOutbound.peer_public_key = wgConfigs[i].account.config.peers[0].public_key;
             singboxOutbound.reserved = wgConfigs[i].account.config.client_id;
             singboxOutbound.private_key = wgConfigs[i].privateKey;
-            singboxOutbound.tag = i === 1 ? `warp-ir_${index + 1}` : `💦 WoW ${index + 1} 🌍`;    
+            singboxOutbound.tag = i === 1 ? `warp-ir_${index + 1}` : `ð¦ WoW ${index + 1} ð`;    
             
             if (i === 0) {
                 singboxOutbound.detour = `warp-ir_${index + 1}`;
@@ -1476,12 +1487,12 @@ const buildDNSObject = async (remoteDNS, localDNS, blockAds, bypassIran, blockPo
     }
 
     if (blockAds) {
-        dnsObject.hosts["geosite:category-ads-all"] = "127.0.0.1";
-        dnsObject.hosts["geosite:category-ads-ir"] = "127.0.0.1";
+        dnsObject.hosts["geosite:category-ads-all"] = ["127.0.0.1"];
+        dnsObject.hosts["geosite:category-ads-ir"] = ["127.0.0.1"];
     }
 
     if (blockPorn) {
-        dnsObject.hosts["geosite:category-porn"] = "127.0.0.1";
+        dnsObject.hosts["geosite:category-porn"] = ["127.0.0.1"];
     }
 
     if (!bypassIran || localDNS === 'localhost' || isWorkerLess) {
@@ -1584,24 +1595,25 @@ const updateDataset = async (env, Settings) => {
     }
 
     const vlessConfig = Settings?.get('outProxy');
+
     const proxySettings = {
-        remoteDNS: Settings?.get('remoteDNS') || currentProxySettings?.remoteDNS || 'https://94.140.14.14/dns-query',
-        localDNS: Settings?.get('localDNS') || currentProxySettings?.localDNS || '8.8.8.8',
-        lengthMin: Settings?.get('fragmentLengthMin') || currentProxySettings?.lengthMin || '100',
-        lengthMax: Settings?.get('fragmentLengthMax') || currentProxySettings?.lengthMax || '200',
-        intervalMin: Settings?.get('fragmentIntervalMin') || currentProxySettings?.intervalMin || '5',
-        intervalMax: Settings?.get('fragmentIntervalMax') || currentProxySettings?.intervalMax || '10',
-        blockAds: Settings?.get('block-ads') || currentProxySettings?.blockAds || false,
-        bypassIran: Settings?.get('bypass-iran') || currentProxySettings?.bypassIran || false,
-        blockPorn: Settings?.get('block-porn') || currentProxySettings?.blockPorn || false,
-        bypassLAN: Settings?.get('bypass-lan') || currentProxySettings?.bypassLAN || false,
-        cleanIPs: Settings?.get('cleanIPs')?.replaceAll(' ', '') || currentProxySettings?.cleanIPs || '',
-        proxyIP: Settings?.get('proxyIP') || currentProxySettings?.proxyIP || '',
-        ports: Settings?.getAll('ports[]') || currentProxySettings?.ports || ['443'],
-        outProxy: vlessConfig || currentProxySettings?.outProxy || '',
+        remoteDNS: Settings ? Settings.get('remoteDNS') : currentProxySettings?.remoteDNS || 'https://94.140.14.14/dns-query',
+        localDNS: Settings ? Settings.get('localDNS') : currentProxySettings?.localDNS || '8.8.8.8',
+        lengthMin: Settings ? Settings.get('fragmentLengthMin') : currentProxySettings?.lengthMin || '100',
+        lengthMax: Settings ? Settings.get('fragmentLengthMax') : currentProxySettings?.lengthMax || '200',
+        intervalMin: Settings ? Settings.get('fragmentIntervalMin') : currentProxySettings?.intervalMin || '5',
+        intervalMax: Settings ? Settings.get('fragmentIntervalMax') : currentProxySettings?.intervalMax || '10',
+        blockAds: Settings ? Settings.get('block-ads') : currentProxySettings?.blockAds || false,
+        bypassIran: Settings ? Settings.get('bypass-iran') : currentProxySettings?.bypassIran || false,
+        blockPorn: Settings ? Settings.get('block-porn') : currentProxySettings?.blockPorn || false,
+        bypassLAN: Settings ? Settings.get('bypass-lan') : currentProxySettings?.bypassLAN || false,
+        cleanIPs: Settings ? Settings.get('cleanIPs')?.replaceAll(' ', '') : currentProxySettings?.cleanIPs || '',
+        proxyIP: Settings ? Settings.get('proxyIP') : currentProxySettings?.proxyIP || '',
+        ports: Settings ? Settings.getAll('ports[]') : currentProxySettings?.ports || ['443'],
+        outProxy: Settings ? vlessConfig : currentProxySettings?.outProxy || '',
         outProxyParams: vlessConfig ? await extractVlessParams(vlessConfig) : currentProxySettings?.outProxyParams || '',
-        wowEndpoint: Settings?.get('wowEndpoint')?.replaceAll(' ', '') || currentProxySettings?.wowEndpoint || 'engage.cloudflareclient.com:2408',
-        warpEndpoints: Settings?.get('warpEndpoints')?.replaceAll(' ', '') || currentProxySettings?.warpEndpoints || 'engage.cloudflareclient.com:2408',
+        wowEndpoint: Settings ? Settings.get('wowEndpoint')?.replaceAll(' ', '') : currentProxySettings?.wowEndpoint || 'engage.cloudflareclient.com:2408',
+        warpEndpoints: Settings ? Settings.get('warpEndpoints')?.replaceAll(' ', '') : currentProxySettings?.warpEndpoints || 'engage.cloudflareclient.com:2408',
         panelVersion: panelVersion
     };
 
@@ -1751,11 +1763,11 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
             <tr>
                 <td>
                     ${config.address === 'Best-Ping' 
-                        ? `<div  style="justify-content: center;"><span><b>💦 Best-Ping 💥</b></span></div>` 
+                        ? `<div  style="justify-content: center;"><span><b>ð¦ Best-Ping ð¥</b></span></div>` 
                         : config.address === 'WorkerLess'
-                            ? `<div  style="justify-content: center;"><span><b>💦 WorkerLess ⭐</b></span></div>`
+                            ? `<div  style="justify-content: center;"><span><b>ð¦ WorkerLess â­</b></span></div>`
                             : config.address === 'Best-Fragment'
-                                ? `<div  style="justify-content: center;"><span><b>💦 Best-Fragment 😎</b></span></div>`
+                                ? `<div  style="justify-content: center;"><span><b>ð¦ Best-Fragment ð</b></span></div>`
                                 : config.address
                     }
                 </td>
@@ -1778,7 +1790,7 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
             let id = `port-${port}`;
             let portBlock = `
                 <div class="routing" style="grid-template-columns: 1fr 2fr; margin-right: 10px;">
-                    <input type="checkbox" id=${id} name=${id} onchange="handlePortChange(event)" value="true" ${ports.includes(port) ? 'checked' : ''}>
+                    <input type="checkbox" id=${id} name=${port} onchange="handlePortChange(event)" value="true" ${ports.includes(port) ? 'checked' : ''}>
                     <label style="margin-bottom: 3px;" for=${id}>${port}</label>
                 </div>`;
             defaultHttpPorts.includes(port) ? httpPortsBlock += portBlock : httpsPortsBlock += portBlock;
@@ -2012,22 +2024,22 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
 	</head>
 	
 	<body>
-		<h1>BPB Panel <span style="font-size: smaller;">${panelVersion}</span> 💦</h1>
+		<h1>BPB Panel <span style="font-size: smaller;">${panelVersion}</span> ð¦</h1>
 		<div class="form-container">
-            <h2>FRAGMENT SETTINGS ⚙️</h2>
+            <h2>FRAGMENT SETTINGS âï¸</h2>
 			<form id="configForm">
 				<div class="form-control">
-					<label for="remoteDNS">🌏 Remote DNS</label>
+					<label for="remoteDNS">ð Remote DNS</label>
 					<input type="url" id="remoteDNS" name="remoteDNS" value="${remoteDNS}" required>
 				</div>
 				<div class="form-control">
-					<label for="localDNS">🏚️ Local DNS</label>
+					<label for="localDNS">ðï¸ Local DNS</label>
 					<input type="text" id="localDNS" name="localDNS" value="${localDNS}"
 						pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|localhost$"
 						title="Please enter a valid DNS IP Address or localhost!"  required>
 				</div>	
 				<div class="form-control">
-					<label for="fragmentLengthMin">📐 Length</label>
+					<label for="fragmentLengthMin">ð Length</label>
 					<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline;">
 						<input type="number" id="fragmentLengthMin" name="fragmentLengthMin" value="${lengthMin}" min="10" required>
 						<span style="text-align: center; white-space: pre;"> - </span>
@@ -2035,7 +2047,7 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
 					</div>
 				</div>
 				<div class="form-control">
-					<label for="fragmentIntervalMin">🕞 Interval</label>
+					<label for="fragmentIntervalMin">ð Interval</label>
 					<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline;">
 						<input type="number" id="fragmentIntervalMin" name="fragmentIntervalMin"
     						value="${intervalMin}" max="30" required>
@@ -2045,10 +2057,10 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
 					</div>
 				</div>
 				<div class="form-control">
-					<label for="outProxy">✈️ Chain Proxy</label>
+					<label for="outProxy">âï¸ Chain Proxy</label>
 					<input type="text" id="outProxy" name="outProxy" value="${outProxy}">
 				</div>
-                <h2>FRAGMENT ROUTING ⚙️</h2>
+                <h2>FRAGMENT ROUTING âï¸</h2>
 				<div class="form-control" style="margin-bottom: 20px;">			
                     <div class="routing">
                         <input type="checkbox" id="block-ads" name="block-ads" style="margin: 0; grid-column: 2;" value="true" ${blockAds ? 'checked' : ''}>
@@ -2067,18 +2079,18 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
                         <label for="bypass-lan">Bypass LAN</label>
 					</div>
 				</div>
-                <h2>PROXY IP ⚙️</h2>
+                <h2>PROXY IP âï¸</h2>
 				<div class="form-control">
-					<label for="proxyIP">📍 IP or Domain</label>
+					<label for="proxyIP">ð IP or Domain</label>
 					<input type="text" id="proxyIP" name="proxyIP" value="${proxyIP}">
 				</div>
-                <h2>CLEAN IP ⚙️</h2>
+                <h2>CLEAN IP âï¸</h2>
 				<div class="form-control">
-					<label for="cleanIPs">✨ Clean IPs</label>
+					<label for="cleanIPs">â¨ Clean IPs</label>
 					<input type="text" id="cleanIPs" name="cleanIPs" value="${cleanIPs.replaceAll(",", " , ")}">
 				</div>
                 <div class="form-control">
-                    <label>🔎 Online Scanner</label>
+                    <label>ð Online Scanner</label>
                     <a href="https://scanner.github1.cloud/" id="scanner" name="scanner" target="_blank">
                         <button type="button" class="button">
                             Scan now
@@ -2086,7 +2098,7 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
                         </button>
                     </a>
                 </div>
-                <h2>PORTS ⚙️</h2>
+                <h2>PORTS âï¸</h2>
                 <div class="table-container">
                     <table id="frag-sub-table">
                         <tr>
@@ -2103,29 +2115,29 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
                         </tr>`}        
                     </table>
                 </div>
-                <h2>WARP ENDPOINTS ⚙️</h2>
+                <h2>WARP ENDPOINTS âï¸</h2>
 				<div class="form-control">
-                    <label for="wowEndpoint">✨ WoW Endpoints</label>
-                    <input type="text" id="wowEndpoint" name="wowEndpoint" value="${wowEndpoint.replaceAll(",", " , ")}">
+                    <label for="wowEndpoint">â¨ WoW Endpoints</label>
+                    <input type="text" id="wowEndpoint" name="wowEndpoint" value="${wowEndpoint.replaceAll(",", " , ")}" required>
 				</div>
 				<div class="form-control">
-                    <label for="warpEndpoints">✨ Warp Endpoints</label>
-                    <input type="text" id="warpEndpoints" name="warpEndpoints" value="${warpEndpoints.replaceAll(",", " , ")}">
+                    <label for="warpEndpoints">â¨ Warp Endpoints</label>
+                    <input type="text" id="warpEndpoints" name="warpEndpoints" value="${warpEndpoints.replaceAll(",", " , ")}" required>
 				</div>
                 <div class="form-control">
-                    <label>🔎 Scanner Script</label>
+                    <label>ð Scanner Script</label>
                     <button type="button" class="button" style="padding: 10px 0;" onclick="copyToClipboard('bash <(curl -fsSL https://raw.githubusercontent.com/Ptechgithub/warp/main/endip/install.sh)', false)">
                         Copy Script<span class="material-symbols-outlined">terminal</span>
                     </button>
                 </div>
 				<div id="apply" class="form-control">
 					<div style="grid-column: 2; width: 100%;">
-						<input type="submit" id="applyButton" class="button disabled" value="APPLY SETTINGS 💥" form="configForm">
+						<input type="submit" id="applyButton" class="button disabled" value="APPLY SETTINGS ð¥" form="configForm">
 					</div>
 				</div>
 			</form>
             <hr>            
-			<h2>NORMAL CONFIGS 🔗</h2>
+			<h2>NORMAL CONFIGS ð</h2>
 			<div class="table-container">
 				<table id="normal-configs-table">
 					<tr>
@@ -2178,6 +2190,10 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
                                 <span class="material-symbols-outlined symbol">verified</span>
                                 <span>Nekoray (Sing-Box)</span>
                             </div>
+                            <div>
+                                <span class="material-symbols-outlined symbol">verified</span>
+                                <span>Karing</span>
+                            </div>
                         </td>
 						<td>
                             <button onclick="copyToClipboard('https://${hostName}/sub/${userID}?app=singbox#BPB-Normal', false)">
@@ -2203,7 +2219,7 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
                     </tr>
 				</table>
 			</div>
-			<h2>FRAGMENT SUB ⛓️</h2>
+			<h2>FRAGMENT SUB âï¸</h2>
 			<div class="table-container">
                 <table id="frag-sub-table">
                     <tr>
@@ -2240,7 +2256,7 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
                     </tr>
                 </table>
             </div>
-            <h2>WARP SUB 🔗</h2>
+            <h2>WARP SUB ð</h2>
 			<div class="table-container">
 				<table id="normal-configs-table">
 					<tr>
@@ -2297,7 +2313,7 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
 					</tr>
 				</table>
 			</div>
-            <h2>FRAGMENT - NEKORAY ⛓️</h2>
+            <h2>FRAGMENT - NEKORAY âï¸</h2>
             <div class="table-container">
 				<table id="custom-configs-table">
 					<tr style="text-wrap: nowrap;">
@@ -2347,7 +2363,9 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
         
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 	<script>
-    let activePortsNo = ${ports.length};
+        const defaultHttpsPorts = ['443', '8443', '2053', '2083', '2087', '2096'];
+        let activePortsNo = ${ports.length};
+        let activeHttpsPortsNo = ${ports.filter(port => defaultHttpsPorts.includes(port)).length};
 		document.addEventListener('DOMContentLoaded', () => {
             const configForm = document.getElementById('configForm');            
             const modal = document.getElementById('myModal');
@@ -2413,12 +2431,29 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
 		});
 
         const handlePortChange = (event) => {
-            event.target.checked ? activePortsNo++ : activePortsNo--;
+            
+            if(event.target.checked) { 
+                activePortsNo++ 
+                defaultHttpsPorts.includes(event.target.name) && activeHttpsPortsNo++;
+            } else {
+                activePortsNo--;
+                defaultHttpsPorts.includes(event.target.name) && activeHttpsPortsNo--;
+            }
+
             if (activePortsNo === 0) {
                 event.preventDefault();
                 event.target.checked = !event.target.checked;
-                alert("⛔ At least one port should be selected! 🫤");
+                alert("â At least one port should be selected! ð«¤");
                 activePortsNo = 1;
+                defaultHttpsPorts.includes(event.target.name) && activeHttpsPortsNo++;
+                return false;
+            }
+                
+            if (activeHttpsPortsNo === 0) {
+                event.preventDefault();
+                event.target.checked = !event.target.checked;
+                alert("â At least one TLS(https) port should be selected! ð«¤");
+                activeHttpsPortsNo = 1;
                 return false;
             }
         }
@@ -2450,7 +2485,7 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
 			textarea.select();
 			document.execCommand('copy');
 			document.body.removeChild(textarea);
-			alert('📋 Copied to clipboard:\\n\\n' +  value);
+			alert('ð Copied to clipboard:\\n\\n' +  value);
 		}
 
         const applySettings = async (event, configForm) => {
@@ -2464,7 +2499,7 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
             const intervalMax = getValue('fragmentIntervalMax');
             const proxyIP = document.getElementById('proxyIP').value?.trim();
             const cleanIP = document.getElementById('cleanIPs');
-            const wowEndpoint = document.getElementById('warpEndpoints').value?.replaceAll(' ', '').split(',');
+            const wowEndpoint = document.getElementById('wowEndpoint').value?.replaceAll(' ', '').split(',');
             const warpEndpoints = document.getElementById('warpEndpoints').value?.replaceAll(' ', '').split(',');
             const cleanIPs = cleanIP.value?.split(',');
             const chainProxy = document.getElementById('outProxy').value?.trim();                    
@@ -2474,7 +2509,7 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
             const validSecurityType = /security=(tls|none|reality)/.test(chainProxy);
             const validTransmission = /type=(tcp|grpc|ws)/.test(chainProxy);
             const validIPDomain = /^((?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,})|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|\\[(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}\\]|\\[(?:[a-fA-F0-9]{1,4}:){1,7}:\\]|\\[(?:[a-fA-F0-9]{1,4}:){1,6}:[a-fA-F0-9]{1,4}\\]|\\[(?:[a-fA-F0-9]{1,4}:){1,5}(?::[a-fA-F0-9]{1,4}){1,2}\\]|\\[(?:[a-fA-F0-9]{1,4}:){1,4}(?::[a-fA-F0-9]{1,4}){1,3}\\]|\\[(?:[a-fA-F0-9]{1,4}:){1,3}(?::[a-fA-F0-9]{1,4}){1,4}\\]|\\[(?:[a-fA-F0-9]{1,4}:){1,2}(?::[a-fA-F0-9]{1,4}){1,5}\\]|\\[[a-fA-F0-9]{1,4}:(?::[a-fA-F0-9]{1,4}){1,6}\\]|\\[:(?::[a-fA-F0-9]{1,4}){1,7}\\]|\\[\\](?:::[a-fA-F0-9]{1,4}){1,7}\\])$/i;
-            const checkedPorts = Array.from(document.querySelectorAll('input[name^="port-"]:checked')).map(input => input.name.split('-')[1]);
+            const checkedPorts = Array.from(document.querySelectorAll('input[id^="port-"]:checked')).map(input => input.id.split('-')[1]);
             const validEndpoint = /^(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|\\[(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}\\]|\\[(?:[a-fA-F0-9]{1,4}:){1,7}:\\]|\\[(?:[a-fA-F0-9]{1,4}:){1,6}:[a-fA-F0-9]{1,4}\\]|\\[(?:[a-fA-F0-9]{1,4}:){1,5}(?::[a-fA-F0-9]{1,4}){1,2}\\]|\\[(?:[a-fA-F0-9]{1,4}:){1,4}(?::[a-fA-F0-9]{1,4}){1,3}\\]|\\[(?:[a-fA-F0-9]{1,4}:){1,3}(?::[a-fA-F0-9]{1,4}){1,4}\\]|\\[(?:[a-fA-F0-9]{1,4}:){1,2}(?::[a-fA-F0-9]{1,4}){1,5}\\]|\\[[a-fA-F0-9]{1,4}:(?::[a-fA-F0-9]{1,4}){1,6}\\]|\\[:(?::[a-fA-F0-9]{1,4}){1,7}\\]|\\[::(?::[a-fA-F0-9]{1,4}){0,7}\\]):(?:[0-9]{1,5})$/;
             checkedPorts.forEach(port => formData.append('ports[]', port));
 
@@ -2493,29 +2528,29 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
             });
     
             if (invalidIPs.length) {
-                alert('⛔ Invalid IPs or Domains 🫤\\n\\n' + invalidIPs.map(ip => '⚠️ ' + ip).join('\\n'));
+                alert('â Invalid IPs or Domains ð«¤\\n\\n' + invalidIPs.map(ip => 'â ï¸ ' + ip).join('\\n'));
                 return false;
             }
             
             if (invalidEndpoints.length) {
-                alert('⛔ Invalid endpoint 🫤\\n\\n' + invalidEndpoints.map(endpoint => '⚠️ ' + endpoint).join('\\n'));
+                alert('â Invalid endpoint ð«¤\\n\\n' + invalidEndpoints.map(endpoint => 'â ï¸ ' + endpoint).join('\\n'));
                 return false;
             }
 
             if (lengthMin >= lengthMax || intervalMin > intervalMax) {
-                alert('⛔ Minimum should be smaller or equal to Maximum! 🫤');               
+                alert('â Minimum should be smaller or equal to Maximum! ð«¤');               
                 return false;
             }
 
             if (!(isVless && (hasSecurity && validSecurityType || !hasSecurity) && validTransmission) && chainProxy) {
-                alert('⛔ Invalid Config! 🫤 \\n - The chain proxy should be VLESS!\\n - Transmission should be GRPC,WS or TCP\\n - Security should be TLS,Reality or None');               
+                alert('â Invalid Config! ð«¤ \\n - The chain proxy should be VLESS!\\n - Transmission should be GRPC,WS or TCP\\n - Security should be TLS,Reality or None');               
                 return false;
             }
 
             try {
                 document.body.style.cursor = 'wait';
                 const applyButtonVal = applyButton.value;
-                applyButton.value = '⌛ Loading...';
+                applyButton.value = 'â Loading...';
 
                 const response = await fetch('/panel', {
                     method: 'POST',
@@ -2527,12 +2562,12 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
                 applyButton.value = applyButtonVal;
 
                 if (response.ok) {
-                    alert('Parameters applied successfully 😎');
+                    alert('Parameters applied successfully ð');
                     window.location.reload(true);
                 } else {
                     const errorMessage = await response.text();
                     console.error(errorMessage, response.status);
-                    alert('⚠️ Session expired! Please login again.');
+                    alert('â ï¸ Session expired! Please login again.');
                     window.location.href = '/login';
                 }           
             } catch (error) {
@@ -2578,7 +2613,7 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
             const isLongEnough = newPassword.length >= 8;
 
             if (!(hasCapitalLetter && hasNumber && isLongEnough)) {
-                passwordError.textContent = '⚠️ Password must contain at least one capital letter, one number, and be at least 8 characters long.';
+                passwordError.textContent = 'â ï¸ Password must contain at least one capital letter, one number, and be at least 8 characters long.';
                 return false;
             }
                     
@@ -2595,17 +2630,17 @@ const renderHomePage = async (env, hostName, fragConfigs) => {
                 if (response.ok) {
                     modal.style.display = "none";
                     document.body.style.overflow = "";
-                    alert("Password changed successfully! 👍");
+                    alert("Password changed successfully! ð");
                     window.location.href = '/login';
                 } else if (response.status === 401) {
                     const errorMessage = await response.text();
-                    passwordError.textContent = '⚠️ ' + errorMessage;
+                    passwordError.textContent = 'â ï¸ ' + errorMessage;
                     console.error(errorMessage, response.status);
-                    alert('⚠️ Session expired! Please login again.');
+                    alert('â ï¸ Session expired! Please login again.');
                     window.location.href = '/login';
                 } else {
                     const errorMessage = await response.text();
-                    passwordError.textContent = '⚠️ ' + errorMessage;
+                    passwordError.textContent = 'â ï¸ ' + errorMessage;
                     console.error(errorMessage, response.status);
                     return false;
                 }
@@ -2691,7 +2726,7 @@ const renderLoginPage = async () => {
     </head>
     <body>
         <div class="container">
-            <h1>BPB Panel <span style="font-size: smaller;">${panelVersion}</span> 💦</h1>
+            <h1>BPB Panel <span style="font-size: smaller;">${panelVersion}</span> ð¦</h1>
             <div class="form-container">
                 <h2>User Login</h2>
                 <form id="loginForm">
@@ -2721,7 +2756,7 @@ const renderLoginPage = async () => {
                 if (response.ok) {
                     window.location.href = '/panel';
                 } else {
-                    passwordError.textContent = '⚠️ Wrong Password!';
+                    passwordError.textContent = 'â ï¸ Wrong Password!';
                     const errorMessage = await response.text();
                     console.error('Login failed:', errorMessage);
                 }
@@ -2762,13 +2797,13 @@ const renderErrorPage = (message, error, refer) => {
 
     <body>
         <div id="error-container">
-            <h1>BPB Panel <span style="font-size: smaller;">${panelVersion}</span> 💦</h1>
+            <h1>BPB Panel <span style="font-size: smaller;">${panelVersion}</span> ð¦</h1>
             <div id="error-message">
                 <h2>${message} ${refer 
                     ? 'Please try again or refer to <a href="https://github.com/bia-pain-bache/BPB-Worker-Panel/blob/main/README.md">documents</a>' 
                     : ''}
                 </h2>
-                <p><b>${error ? `⚠️ ${error}` : ''}</b></p>
+                <p><b>${error ? `â ï¸ ${error}` : ''}</b></p>
             </div>
         </div>
     </body>
@@ -2987,34 +3022,41 @@ const singboxConfigTemp = {
     dns: {
         servers: [
             {
-                tag: "dns-remote",
                 address: "https://8.8.8.8/dns-query",
-                address_resolver: "dns-direct"
+                address_resolver: "dns-direct",
+                strategy: "prefer_ipv4",
+                tag: "dns-remote"
             },
             {
-                tag: "dns-direct",
                 address: "8.8.8.8",
                 address_resolver: "dns-local",
-                detour: "direct"
+                strategy: "prefer_ipv4",
+                detour: "direct",
+                tag: "dns-direct"
             },
             {
-                tag: "dns-local",
                 address: "local",
-                detour: "direct"
+                tag: "dns-local"
             },
             {
-                tag: "dns-block",
-                address: "rcode://success"
+                address: "rcode://success",
+                tag: "dns-block"
             }
         ],
         rules: [
             {
-                domain_suffix: [".ir"],
+                domain_suffix: ".ir",
                 server: "dns-direct"
             },
             {
-                outbound: "direct",
-                server: "dns-direct"
+                disable_cache: true,
+                rule_set: [
+                    "geosite-category-ads-all",
+                    "geosite-malware",
+                    "geosite-phishing",
+                    "geosite-cryptominers"
+                ],
+                server: "dns-block"
             }
         ],
         independent_cache: true
@@ -3031,8 +3073,9 @@ const singboxConfigTemp = {
         {
             type: "tun",
             tag: "tun-in",
-            mtu: 9000,
             inet4_address: "172.19.0.1/28",
+            inet6_address: "fdfe:dcba:9876::1/126",
+            mtu: 9000,
             auto_route: true,
             strict_route: true,
             endpoint_independent_nat: true,
@@ -3053,11 +3096,11 @@ const singboxConfigTemp = {
         {
             type: "selector",
             tag: "proxy",
-            outbounds: ["💦 Best-Ping 💥"]
+            outbounds: ["ð¦ Best-Ping ð¥"]
         },
         {
             type: "urltest",
-            tag: "💦 Best-Ping 💥",
+            tag: "ð¦ Best-Ping ð¥",
             outbounds: [],
             url: "https://www.gstatic.com/generate_204",
             interval: "30s",
@@ -3089,7 +3132,7 @@ const singboxConfigTemp = {
             {
                 network: "udp",
                 port: 443,
-                port_range: [],
+                protocol: "quic",
                 outbound: "block"
             },
             {
@@ -3180,6 +3223,9 @@ const singboxConfigTemp = {
         final: "proxy"
     },
     experimental: {
+        cache_file: {
+            enabled: true
+        },
         clash_api: {
             external_controller: "0.0.0.0:9090",
             external_ui: "yacd",
